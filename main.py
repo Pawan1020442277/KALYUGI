@@ -14,7 +14,7 @@ LAST_SEEN_PERIOD = {}
 
 nest_asyncio.apply()
 
-# --- Fetch 500 Results ---
+# --- Fetch 200 Results ---
 async def fetch_latest_results():
     results = []
     try:
@@ -34,7 +34,7 @@ async def fetch_latest_results():
         print("❌ API Error:", e)
         return []
 
-# --- GPT Prediction using Groq + Meta LLaMA ---
+# --- GPT Prediction using Groq API ---
 async def predict_with_gpt(history_data):
     try:
         formatted_data = "\n".join([
@@ -70,7 +70,7 @@ Size: <Big/Small>
         }
 
         payload = {
-            "model": "llama3-8b-8192",  # or use "llama3-70b-8192"
+            "model": "llama3-8b-8192",
             "messages": [
                 {"role": "system", "content": "You are a powerful AI pattern analyst."},
                 {"role": "user", "content": prompt}
@@ -136,19 +136,23 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("😴 No prediction is running.")
 
 # --- MAIN ---
-async def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("stop", stop))
+async def run_bot():
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    await app.bot.set_my_commands([
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("stop", stop))
+
+    await application.bot.set_my_commands([
         BotCommand("start", "Start prediction"),
         BotCommand("stop", "Stop prediction")
     ])
 
     print("🤖 Bot is running...")
-    await app.run_polling()
+    await application.run_polling()
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(main())
-
+    import sys
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    nest_asyncio.apply()
+    asyncio.run(run_bot())
