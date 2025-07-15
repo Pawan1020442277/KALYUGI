@@ -5,7 +5,7 @@ from telegram import Update, BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # --- CONFIG ---
-TELEGRAM_TOKEN = "7262171318:AAH-7LfE2M6P5q3JPG3wOXRA_PpI-bhfh4I"
+TELEGRAM_TOKEN = "7779767864:AAEXVWIMis8hfrmmbiLA-Np-JTPlKUy-_MI"
 GROQ_API_KEY = "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"
 ACCESS_KEY = "mysecretkey"
 
