@@ -34,7 +34,7 @@ async def fetch_latest_results():
         print("❌ API Error:", e)
         return []
 
-# --- GPT Prediction using Groq API ---
+# --- GPT Prediction ---
 async def predict_with_gpt(history_data):
     try:
         formatted_data = "\n".join([
@@ -55,9 +55,6 @@ Your task is to:
 - Identify strong patterns, trends, repetitions, alternations, hot/cold numbers, color cycles, and size shifts (Big = 6-9, Small = 1-5).
 - Based on this deep pattern analysis, accurately predict the result for the next period (current period + 1).
 Output strictly in this format, without any extra words: in this format:
-{formatted_data}
-
-Give result only in this format:
 Period: {next_period}
 Number: <number>
 Color: <color>
@@ -84,7 +81,7 @@ Size: <Big/Small>
     except Exception as e:
         return f"❌ GPT Error: {e}"
 
-# --- START Command ---
+# --- Start Command ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if not args or args[0] != ACCESS_KEY:
@@ -97,7 +94,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     PREDICTED_USERS.add(chat_id)
-    await update.message.reply_text("✅ Prediction started! You'll now receive future predictions...")
+    await update.message.reply_text("✅ Prediction started!")
 
     async def monitor_results():
         global LAST_SEEN_PERIOD
@@ -108,7 +105,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 continue
 
             current_period = results[0]['issueNumber']
-
             if LAST_SEEN_PERIOD.get(chat_id) != current_period:
                 LAST_SEEN_PERIOD[chat_id] = current_period
                 try:
@@ -126,7 +122,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     asyncio.create_task(monitor_results())
 
-# --- STOP Command ---
+# --- Stop Command ---
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     if chat_id in PREDICTED_USERS:
@@ -135,24 +131,19 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("😴 No prediction is running.")
 
-# --- MAIN ---
+# --- Main Function ---
 async def run_bot():
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("stop", stop))
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("stop", stop))
-
-    await application.bot.set_my_commands([
+    await app.bot.set_my_commands([
         BotCommand("start", "Start prediction"),
         BotCommand("stop", "Stop prediction")
     ])
 
     print("🤖 Bot is running...")
-    await application.run_polling()
+    await app.run_polling()
 
 if __name__ == "__main__":
-    import sys
-    if sys.platform == "win32":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    nest_asyncio.apply()
     asyncio.run(run_bot())
