@@ -4,7 +4,7 @@ import nest_asyncio
 from telegram import Update, BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# --- CONFIG --
+# --- CONFIG ---
 TELEGRAM_TOKEN = "7779767864:AAEXVWIMis8hfrmmbiLA-Np-JTPlKUy-_MI"
 GROQ_API_KEY = "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"
 ACCESS_KEY = "mysecretkey"
@@ -46,19 +46,19 @@ async def predict_with_gpt(history_data):
         next_period = str(int(current_period) + 1)
 
         prompt = f"""
-You are an expert in detecting advanced patterns in lottery-style game results. Below are 1000 past results including the current period. Each result contains:
-
-APeriod number, Number (1–9), and Color(s).
+You are an expert in detecting advanced patterns in lottery-style game results. Below are past results. Each result contains: Period number, Number (1–9), and Color(s).
 
 Your task is to:
-- Analyze all 1000 results (including the current/latest one).
-- Identify strong patterns, trends, repetitions, alternations, hot/cold numbers, color cycles, and size shifts (Big = 6-9, Small = 1-5).
-- Based on this deep pattern analysis, accurately predict the result for the next period (current period + 1).
-Output strictly in this format, without any extra words: in this format:
+- Analyze the data
+- Predict result for the next period (current + 1)
+Output strictly in this format:
 Period: {next_period}
 Number: <number>
 Color: <color>
 Size: <Big/Small>
+
+Here is the data:
+{formatted_data}
 """
 
         headers = {
@@ -76,9 +76,14 @@ Size: <Big/Small>
 
         response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
+        data = response.json()
+
+        prediction = data["choices"][0]["message"]["content"].strip()
+        print("🧠 GPT Prediction:", prediction)
+        return prediction
 
     except Exception as e:
+        print("❌ GPT Error:", e)
         return f"❌ GPT Error: {e}"
 
 # --- Start Command ---
@@ -117,6 +122,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                     await context.bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
                 except Exception as e:
+                    print("❌ Telegram Send Error:", e)
                     await context.bot.send_message(chat_id=chat_id, text=f"❌ Error: {e}")
             await asyncio.sleep(3)
 
