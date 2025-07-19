@@ -4,7 +4,7 @@ import nest_asyncio
 from telegram import Update, BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# --- CONFIG ---
+# --- CONFIG --
 TELEGRAM_TOKEN = "7779767864:AAEXVWIMis8hfrmmbiLA-Np-JTPlKUy-_MI"
 GROQ_API_KEY = "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"
 ACCESS_KEY = "mysecretkey"
